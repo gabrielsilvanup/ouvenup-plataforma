@@ -18,7 +18,13 @@ export default function Ouvidoria() {
   });
 
   // Opções de Classificação
-  const tipos = ['Denúncia', 'Ideia de Lei', 'Reclamação', 'Sugestão', 'Outros'];
+  const tipos = [
+    { label: 'Denúncia', icon: '🚨' },
+    { label: 'Ideia de Lei', icon: '💡' },
+    { label: 'Reclamação', icon: '😤' },
+    { label: 'Sugestão', icon: '✨' },
+    { label: 'Outros', icon: '📝' }
+  ];
   
   // Opções Administrativas
   const orgaos = [
@@ -26,7 +32,7 @@ export default function Ouvidoria() {
     'Segurança', 'Obras/Infraestrutura', 'Meio Ambiente', 'Outros'
   ];
 
-  // Lista OFICIAL de Bairros de Nuporanga (Conforme imagem)
+  // Lista OFICIAL de Bairros de Nuporanga
   const bairros = [
     'Centro',
     'Arlindo Rossi',
@@ -54,18 +60,23 @@ export default function Ouvidoria() {
     setFormData({ ...formData, [field]: value });
   };
 
-  const nextStep = () => setStep(step + 1);
-  const prevStep = () => setStep(step - 1);
+  const nextStep = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setStep(step + 1);
+  };
+  
+  const prevStep = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setStep(step - 1);
+  };
 
   const handleSubmit = () => {
-    // Gera um protocolo fictício baseado no ano e aleatório
     const novoProtocolo = `NUP-${Math.floor(Math.random() * 10000)}-${new Date().getFullYear()}`;
     setProtocolo(novoProtocolo);
-    setStep(5); // Vai para tela de sucesso
+    nextStep(); 
   };
 
   const gerarLinkWhatsapp = () => {
-    // Monta o texto completo para você ter acesso a tudo
     let texto = `*NOVA DEMANDA - OUVENUP*\n`;
     texto += `*Protocolo:* ${protocolo}\n`;
     texto += `*Tipo:* ${formData.tipo}\n`;
@@ -85,35 +96,52 @@ export default function Ouvidoria() {
       texto += `*Cidadão:* Anônimo\n`;
     }
 
-    // Abre o WhatsApp para compartilhar esse texto
     return `https://wa.me/?text=${encodeURIComponent(texto)}`;
   };
 
   return (
-    <div className="py-10 max-w-2xl mx-auto">
+    <div className="max-w-3xl mx-auto pb-20">
       
-      {/* Barra de Progresso */}
-      <div className="mb-8 flex justify-between text-sm font-bold text-gray-400 uppercase tracking-wider px-2">
-        <span className={step >= 1 ? "text-blue-600" : ""}>1. Tipo</span>
-        <span className={step >= 2 ? "text-blue-600" : ""}>2. Local</span>
-        <span className={step >= 3 ? "text-blue-600" : ""}>3. Relato</span>
-        <span className={step >= 4 ? "text-blue-600" : ""}>4. Envio</span>
+      {/* Cabeçalho da Seção */}
+      <div className="text-center mb-10">
+        <h2 className="text-3xl font-black text-[#002B5B] mb-2">Central de Registros</h2>
+        <p className="text-slate-500">Preencha os dados abaixo para formalizar sua demanda.</p>
       </div>
 
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
+      {/* Barra de Progresso Visual (Stepper) */}
+      <div className="mb-12 relative flex justify-between items-center px-4 md:px-12">
+        {/* Linha de Fundo */}
+        <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10"></div>
+        {/* Linha de Progresso Azul */}
+        <div 
+          className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-[#002B5B] -z-10 transition-all duration-500"
+          style={{ width: `${((step - 1) / 4) * 100}%` }}
+        ></div>
+
+        {[1, 2, 3, 4].map((num) => (
+          <div key={num} className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 border-4 ${step >= num ? 'bg-[#002B5B] border-[#002B5B] text-white' : 'bg-white border-slate-200 text-slate-400'}`}>
+            {step > num ? '✓' : num}
+          </div>
+        ))}
+      </div>
+
+      <div className="bg-white p-8 md:p-10 rounded-[2rem] shadow-xl shadow-slate-200/50 border border-slate-100">
         
         {/* ETAPA 1: CLASSIFICAÇÃO */}
         {step === 1 && (
-          <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Qual o tipo do registro?</h2>
-            <div className="grid gap-3">
-              {tipos.map((tipo) => (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <span className="text-blue-500">1.</span> Qual o motivo do contato?
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {tipos.map((item) => (
                 <button
-                  key={tipo}
-                  onClick={() => { handleSelect('tipo', tipo); nextStep(); }}
-                  className="p-4 text-left border rounded-xl hover:bg-blue-50 hover:border-blue-500 transition-all font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  key={item.label}
+                  onClick={() => { handleSelect('tipo', item.label); nextStep(); }}
+                  className="group p-5 text-left border-2 border-slate-100 rounded-2xl hover:border-[#002B5B] hover:bg-blue-50/50 transition-all active:scale-95"
                 >
-                  {tipo}
+                  <span className="text-2xl mb-2 block group-hover:scale-110 transition-transform">{item.icon}</span>
+                  <span className="font-bold text-slate-700 group-hover:text-[#002B5B]">{item.label}</span>
                 </button>
               ))}
             </div>
@@ -122,43 +150,48 @@ export default function Ouvidoria() {
 
         {/* ETAPA 2: LOCALIZAÇÃO */}
         {step === 2 && (
-          <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Onde é a ocorrência?</h2>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <span className="text-blue-500">2.</span> Onde aconteceu?
+            </h3>
             
-            <div className="flex gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-4 mb-8">
               <button 
                 onClick={() => handleSelect('natureza', 'geografica')}
-                className={`flex-1 py-3 rounded-lg font-bold border transition-all ${formData.natureza === 'geografica' ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+                className={`flex-1 py-4 px-6 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${formData.natureza === 'geografica' ? 'bg-[#002B5B] text-white border-[#002B5B] shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}
               >
-                📍 Na Cidade
+                <span>📍</span> Problema na Cidade
               </button>
               <button 
                 onClick={() => handleSelect('natureza', 'administrativa')}
-                className={`flex-1 py-3 rounded-lg font-bold border transition-all ${formData.natureza === 'administrativa' ? 'bg-blue-600 text-white border-blue-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+                className={`flex-1 py-4 px-6 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${formData.natureza === 'administrativa' ? 'bg-[#002B5B] text-white border-[#002B5B] shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}
               >
-                🏛️ Prefeitura/Orgão
+                <span>🏛️</span> Órgão Público
               </button>
             </div>
 
             {formData.natureza === 'geografica' && (
-              <div className="space-y-4">
+              <div className="space-y-5">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Bairro (Obrigatório)</label>
-                  <select 
-                    className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                    onChange={(e) => handleSelect('bairro', e.target.value)}
-                    value={formData.bairro}
-                  >
-                    <option value="">Selecione o bairro...</option>
-                    {bairros.map(b => <option key={b} value={b}>{b}</option>)}
-                  </select>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Bairro <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select 
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white transition-all text-slate-700 font-medium"
+                      onChange={(e) => handleSelect('bairro', e.target.value)}
+                      value={formData.bairro}
+                    >
+                      <option value="">Selecione na lista...</option>
+                      {bairros.map(b => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Endereço (Opcional)</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Endereço (Opcional)</label>
                   <input 
                     type="text" 
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                    placeholder="Rua, número ou referência"
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white transition-all"
+                    placeholder="Ex: Rua Principal, perto da padaria..."
                     onChange={(e) => handleSelect('endereco', e.target.value)}
                     value={formData.endereco}
                   />
@@ -167,25 +200,28 @@ export default function Ouvidoria() {
             )}
 
             {formData.natureza === 'administrativa' && (
-              <div className="animate-fade-in">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Órgão Relacionado</label>
-                <select 
-                  className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 outline-none"
-                  onChange={(e) => handleSelect('orgao', e.target.value)}
-                  value={formData.orgao}
-                >
-                  <option value="">Selecione o setor...</option>
-                  {orgaos.map(o => <option key={o} value={o}>{o}</option>)}
-                </select>
+              <div className="space-y-5 animate-in fade-in">
+                <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Secretaria / Setor</label>
+                <div className="relative">
+                  <select 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white transition-all text-slate-700 font-medium"
+                    onChange={(e) => handleSelect('orgao', e.target.value)}
+                    value={formData.orgao}
+                  >
+                    <option value="">Selecione o órgão...</option>
+                    {orgaos.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
+                </div>
               </div>
             )}
 
-            <div className="mt-8 flex justify-between items-center">
-              <button onClick={prevStep} className="text-gray-500 font-medium hover:text-gray-700 px-4 py-2">Voltar</button>
+            <div className="mt-10 flex justify-between items-center pt-6 border-t border-slate-100">
+              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2 transition-colors">Voltar</button>
               <button 
                 onClick={nextStep} 
                 disabled={!formData.natureza || (formData.natureza === 'geografica' && !formData.bairro) || (formData.natureza === 'administrativa' && !formData.orgao)}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition shadow-lg shadow-blue-200"
+                className="bg-[#002B5B] text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-900 transition shadow-lg shadow-blue-900/20"
               >
                 Continuar
               </button>
@@ -195,27 +231,30 @@ export default function Ouvidoria() {
 
         {/* ETAPA 3: RELATO */}
         {step === 3 && (
-          <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-800 mb-4">Detalhes do caso</h2>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <span className="text-blue-500">3.</span> Detalhes do caso
+            </h3>
             
             <textarea
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-              placeholder="Descreva o que aconteceu..."
+              className="w-full h-40 p-5 bg-slate-50 border border-slate-200 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white resize-none transition-all text-slate-700 leading-relaxed"
+              placeholder="Descreva a situação com o máximo de detalhes possível..."
               value={formData.descricao}
               onChange={(e) => handleSelect('descricao', e.target.value)}
             ></textarea>
 
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:bg-gray-50 transition group">
-              <span className="text-3xl block mb-2 group-hover:scale-110 transition-transform">📷</span>
-              <p className="text-sm text-gray-500">Clique para adicionar fotos ou vídeos (Opcional)</p>
-            </div>
+            <label className="block w-full border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-all group">
+              <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl group-hover:scale-110 transition-transform">📷</div>
+              <span className="block font-bold text-slate-600 group-hover:text-blue-600">Adicionar Fotos ou Vídeo</span>
+              <span className="text-sm text-slate-400">Clique para selecionar arquivos (Opcional)</span>
+            </label>
 
-            <div className="mt-8 flex justify-between items-center">
-              <button onClick={prevStep} className="text-gray-500 font-medium hover:text-gray-700 px-4 py-2">Voltar</button>
+            <div className="mt-10 flex justify-between items-center pt-6 border-t border-slate-100">
+              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2 transition-colors">Voltar</button>
               <button 
                 onClick={nextStep}
                 disabled={!formData.descricao}
-                className="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold disabled:opacity-50 hover:bg-blue-700 transition shadow-lg shadow-blue-200"
+                className="bg-[#002B5B] text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-900 transition shadow-lg shadow-blue-900/20"
               >
                 Continuar
               </button>
@@ -225,61 +264,63 @@ export default function Ouvidoria() {
 
         {/* ETAPA 4: FINALIZAÇÃO */}
         {step === 4 && (
-          <div className="animate-fade-in">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Identificação</h2>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+              <span className="text-blue-500">4.</span> Identificação
+            </h3>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 mb-8">
               <div 
-                className={`p-4 border rounded-xl cursor-pointer flex items-center gap-3 transition-all ${formData.identificacao === 'anonimo' ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' : 'hover:border-gray-400'}`}
+                className={`p-6 border-2 rounded-2xl cursor-pointer flex items-center gap-4 transition-all ${formData.identificacao === 'anonimo' ? 'border-[#002B5B] bg-blue-50/30' : 'border-slate-100 hover:border-slate-300'}`}
                 onClick={() => handleSelect('identificacao', 'anonimo')}
               >
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.identificacao === 'anonimo' ? 'border-blue-600' : 'border-gray-300'}`}>
-                  {formData.identificacao === 'anonimo' && <div className="w-3 h-3 bg-blue-600 rounded-full"></div>}
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${formData.identificacao === 'anonimo' ? 'border-[#002B5B]' : 'border-slate-300'}`}>
+                  {formData.identificacao === 'anonimo' && <div className="w-3 h-3 bg-[#002B5B] rounded-full"></div>}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800">Enviar Anônimo</p>
-                  <p className="text-sm text-gray-500">Seus dados não aparecem no relato público.</p>
+                  <p className="font-bold text-slate-800">Enviar como Anônimo</p>
+                  <p className="text-sm text-slate-500">Seus dados não aparecerão no relatório público.</p>
                 </div>
               </div>
 
               <div 
-                className={`p-4 border rounded-xl cursor-pointer flex items-center gap-3 transition-all ${formData.identificacao === 'identificado' ? 'border-blue-500 bg-blue-50 ring-1 ring-blue-500' : 'hover:border-gray-400'}`}
+                className={`p-6 border-2 rounded-2xl cursor-pointer flex items-center gap-4 transition-all ${formData.identificacao === 'identificado' ? 'border-[#002B5B] bg-blue-50/30' : 'border-slate-100 hover:border-slate-300'}`}
                 onClick={() => handleSelect('identificacao', 'identificado')}
               >
-                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${formData.identificacao === 'identificado' ? 'border-blue-600' : 'border-gray-300'}`}>
-                  {formData.identificacao === 'identificado' && <div className="w-3 h-3 bg-blue-600 rounded-full"></div>}
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${formData.identificacao === 'identificado' ? 'border-[#002B5B]' : 'border-slate-300'}`}>
+                  {formData.identificacao === 'identificado' && <div className="w-3 h-3 bg-[#002B5B] rounded-full"></div>}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800">Quero me Identificar</p>
-                  <p className="text-sm text-gray-500">Ajuda na credibilidade da denúncia.</p>
+                  <p className="font-bold text-slate-800">Quero me Identificar</p>
+                  <p className="text-sm text-slate-500">Ideal para receber retorno sobre a solução.</p>
                 </div>
               </div>
             </div>
 
             {formData.identificacao === 'identificado' && (
-               <div className="space-y-3 mb-6 animate-fade-in pl-1">
+               <div className="space-y-4 mb-8 animate-in fade-in pl-2 border-l-4 border-slate-200">
                  <input 
                    type="text" 
                    placeholder="Seu Nome Completo" 
-                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                   className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#002B5B]"
                    onChange={(e) => handleSelect('nome', e.target.value)}
                  />
                  <input 
                    type="text" 
-                   placeholder="Seu WhatsApp" 
-                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                   placeholder="Seu WhatsApp (com DDD)" 
+                   className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#002B5B]"
                    onChange={(e) => handleSelect('whatsapp', e.target.value)}
                  />
                </div>
             )}
 
-            <div className="mt-8 flex justify-between items-center">
-              <button onClick={prevStep} className="text-gray-500 font-medium hover:text-gray-700 px-4 py-2">Voltar</button>
+            <div className="mt-10 flex justify-between items-center pt-6 border-t border-slate-100">
+              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2 transition-colors">Voltar</button>
               <button 
                 onClick={handleSubmit}
-                className="bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 transition shadow-lg shadow-green-200 transform hover:-translate-y-1"
+                className="bg-emerald-500 text-white px-10 py-4 rounded-xl font-bold hover:bg-emerald-600 transition shadow-xl shadow-emerald-500/30 flex items-center gap-2 transform hover:-translate-y-1"
               >
-                ✅ Finalizar e Enviar
+                <span>✅</span> Finalizar Registro
               </button>
             </div>
           </div>
@@ -287,30 +328,30 @@ export default function Ouvidoria() {
 
         {/* TELA DE SUCESSO (PROTOCOLO) */}
         {step === 5 && (
-          <div className="text-center py-8 animate-fade-in">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-5xl">🎉</span>
+          <div className="text-center py-10 animate-in zoom-in duration-500">
+            <div className="w-24 h-24 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-8 text-5xl shadow-lg shadow-emerald-100">
+              🎉
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Registrado!</h2>
-            <p className="text-gray-600 mb-8 max-w-md mx-auto">Sua participação foi contabilizada. Compartilhe o resumo para garantir que sua voz chegue até nós.</p>
+            <h2 className="text-4xl font-black text-slate-800 mb-4">Registro Realizado!</h2>
+            <p className="text-slate-500 mb-10 max-w-md mx-auto text-lg">Sua voz foi ouvida. Agora, compartilhe o protocolo para oficializar a demanda.</p>
             
-            <div className="bg-gray-50 border border-gray-200 p-6 rounded-2xl mb-8 inline-block shadow-inner">
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-bold mb-1">Seu Protocolo</p>
-              <p className="text-3xl font-mono font-bold text-blue-600 tracking-wider">{protocolo}</p>
+            <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl mb-10 inline-block shadow-inner">
+              <p className="text-xs text-slate-400 uppercase tracking-[0.2em] font-bold mb-2">Seu Número de Protocolo</p>
+              <p className="text-4xl font-mono font-black text-[#002B5B] tracking-wider select-all">{protocolo}</p>
             </div>
 
             <a 
               href={gerarLinkWhatsapp()}
               target="_blank"
               rel="noreferrer"
-              className="block w-full bg-[#25D366] text-white font-bold py-4 rounded-xl hover:bg-[#20bd5a] transition shadow-lg shadow-green-100 flex items-center justify-center gap-2 mb-4"
+              className="block w-full bg-[#25D366] text-white font-bold py-5 rounded-2xl hover:bg-[#20bd5a] transition shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 mb-6 transform hover:-translate-y-1"
             >
-              <span>📲</span> Compartilhar Resumo no WhatsApp
+              <span className="text-2xl">📲</span> Enviar Comprovante no WhatsApp
             </a>
             
             <button 
               onClick={() => window.location.reload()}
-              className="text-gray-500 hover:text-blue-600 font-medium py-2 px-4 rounded-lg hover:bg-gray-50 transition"
+              className="text-slate-400 hover:text-[#002B5B] font-bold py-2"
             >
               Voltar ao Início
             </button>
