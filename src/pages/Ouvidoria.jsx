@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 export default function Ouvidoria() {
   const [step, setStep] = useState(1);
   const [protocolo, setProtocolo] = useState(null);
+  const [isEnviando, setIsEnviando] = useState(false);
   
   // Estado para guardar os dados do formulário
   const [formData, setFormData] = useState({
@@ -11,6 +12,7 @@ export default function Ouvidoria() {
     bairro: '',
     endereco: '',
     orgao: '',
+    unidade_especifica: '',
     descricao: '',
     identificacao: 'anonimo', // 'anonimo' ou 'identificado'
     nome: '',
@@ -32,7 +34,7 @@ export default function Ouvidoria() {
     'Segurança', 'Obras/Infraestrutura', 'Meio Ambiente', 'Outros'
   ];
 
-  // Lista OFICIAL de Bairros de Nuporanga
+  // Lista OFICIAL de Bairros de Nuporanga (Respeitando a ordem da lista fornecida)
   const bairros = [
     'Centro',
     'Arlindo Rossi',
@@ -70,10 +72,44 @@ export default function Ouvidoria() {
     setStep(step - 1);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    setIsEnviando(true);
     const novoProtocolo = `NUP-${Math.floor(Math.random() * 10000)}-${new Date().getFullYear()}`;
-    setProtocolo(novoProtocolo);
-    nextStep(); 
+    
+    const dadosParaPlanilha = {
+      protocolo: novoProtocolo,
+      tipo: formData.tipo,
+      natureza: formData.natureza,
+      bairro: formData.bairro,
+      orgao: formData.orgao,
+      unidade_especifica: formData.unidade_especifica,
+      descricao: formData.descricao,
+      identificacao: formData.identificacao,
+      nome: formData.nome,
+      whatsapp: formData.whatsapp
+    };
+
+    try {
+      const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbyMd8-2ceGPrf8gyIkstLwXhqAdYNct7-_57Y8eknR4Glq-h31HcTxZaOJUJMo1Xdy5dA/exec";
+
+      await fetch(URL_GOOGLE_SHEETS, {
+        method: "POST",
+        mode: "no-cors", 
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dadosParaPlanilha),
+      });
+
+      setProtocolo(novoProtocolo);
+      setIsEnviando(false);
+      nextStep();
+    } catch (error) {
+      console.error("Erro ao enviar para a planilha:", error);
+      setProtocolo(novoProtocolo);
+      setIsEnviando(false);
+      nextStep();
+    }
   };
 
   const gerarLinkWhatsapp = () => {
@@ -86,6 +122,7 @@ export default function Ouvidoria() {
       if (formData.endereco) texto += `*Endereço:* ${formData.endereco}\n`;
     } else {
       texto += `*Órgão:* ${formData.orgao}\n`;
+      if (formData.unidade_especifica) texto += `*Unidade:* ${formData.unidade_especifica}\n`;
     }
     
     texto += `*Relato:* ${formData.descricao}\n`;
@@ -100,19 +137,16 @@ export default function Ouvidoria() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto pb-20">
+    <div className="max-w-3xl mx-auto pb-20 pt-10 px-4">
       
-      {/* Cabeçalho da Seção */}
       <div className="text-center mb-10">
         <h2 className="text-3xl font-black text-[#002B5B] mb-2">Central de Registros</h2>
-        <p className="text-slate-500">Preencha os dados abaixo para formalizar sua demanda.</p>
+        <p className="text-slate-500">Exerça sua cidadania de forma rápida e segura.</p>
       </div>
 
-      {/* Barra de Progresso Visual (Stepper) */}
+      {/* Stepper Visual */}
       <div className="mb-12 relative flex justify-between items-center px-4 md:px-12">
-        {/* Linha de Fundo */}
         <div className="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 -z-10"></div>
-        {/* Linha de Progresso Azul */}
         <div 
           className="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-[#002B5B] -z-10 transition-all duration-500"
           style={{ width: `${((step - 1) / 4) * 100}%` }}
@@ -131,7 +165,7 @@ export default function Ouvidoria() {
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <span className="text-blue-500">1.</span> Qual o motivo do contato?
+              <span className="text-blue-500">1.</span> Qual o motivo do registro?
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {tipos.map((item) => (
@@ -152,7 +186,7 @@ export default function Ouvidoria() {
         {step === 2 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <span className="text-blue-500">2.</span> Onde aconteceu?
+              <span className="text-blue-500">2.</span> Onde ocorreu?
             </h3>
             
             <div className="flex flex-col sm:flex-row gap-4 mb-8">
@@ -160,7 +194,7 @@ export default function Ouvidoria() {
                 onClick={() => handleSelect('natureza', 'geografica')}
                 className={`flex-1 py-4 px-6 rounded-xl font-bold border-2 transition-all flex items-center justify-center gap-2 ${formData.natureza === 'geografica' ? 'bg-[#002B5B] text-white border-[#002B5B] shadow-lg' : 'bg-white text-slate-500 border-slate-100 hover:border-slate-300'}`}
               >
-                <span>📍</span> Problema na Cidade
+                <span>📍</span> Na Cidade
               </button>
               <button 
                 onClick={() => handleSelect('natureza', 'administrativa')}
@@ -171,7 +205,7 @@ export default function Ouvidoria() {
             </div>
 
             {formData.natureza === 'geografica' && (
-              <div className="space-y-5">
+              <div className="space-y-5 animate-in fade-in">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Bairro <span className="text-red-500">*</span></label>
                   <div className="relative">
@@ -180,7 +214,7 @@ export default function Ouvidoria() {
                       onChange={(e) => handleSelect('bairro', e.target.value)}
                       value={formData.bairro}
                     >
-                      <option value="">Selecione na lista...</option>
+                      <option value="">Selecione o bairro...</option>
                       {bairros.map(b => <option key={b} value={b}>{b}</option>)}
                     </select>
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
@@ -191,7 +225,7 @@ export default function Ouvidoria() {
                   <input 
                     type="text" 
                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white transition-all"
-                    placeholder="Ex: Rua Principal, perto da padaria..."
+                    placeholder="Rua, número ou ponto de referência"
                     onChange={(e) => handleSelect('endereco', e.target.value)}
                     value={formData.endereco}
                   />
@@ -201,27 +235,39 @@ export default function Ouvidoria() {
 
             {formData.natureza === 'administrativa' && (
               <div className="space-y-5 animate-in fade-in">
-                <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Secretaria / Setor</label>
-                <div className="relative">
-                  <select 
-                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white transition-all text-slate-700 font-medium"
-                    onChange={(e) => handleSelect('orgao', e.target.value)}
-                    value={formData.orgao}
-                  >
-                    <option value="">Selecione o órgão...</option>
-                    {orgaos.map(o => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Órgão Relacionado <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <select 
+                      className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl appearance-none focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white transition-all text-slate-700 font-medium"
+                      onChange={(e) => handleSelect('orgao', e.target.value)}
+                      value={formData.orgao}
+                    >
+                      <option value="">Selecione o setor...</option>
+                      {orgaos.map(o => <option key={o} value={o}>{o}</option>)}
+                    </select>
+                    <div className="absolute right-4 top-1/2 transform -translate-y-1/2 pointer-events-none text-slate-500">▼</div>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Unidade Específica (Opcional)</label>
+                  <input 
+                    type="text" 
+                    className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white transition-all"
+                    placeholder="Ex: ESF Vila Nova, Escola Maria Abadia..."
+                    onChange={(e) => handleSelect('unidade_especifica', e.target.value)}
+                    value={formData.unidade_especifica}
+                  />
                 </div>
               </div>
             )}
 
             <div className="mt-10 flex justify-between items-center pt-6 border-t border-slate-100">
-              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2 transition-colors">Voltar</button>
+              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2">Voltar</button>
               <button 
                 onClick={nextStep} 
                 disabled={!formData.natureza || (formData.natureza === 'geografica' && !formData.bairro) || (formData.natureza === 'administrativa' && !formData.orgao)}
-                className="bg-[#002B5B] text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-900 transition shadow-lg shadow-blue-900/20"
+                className="bg-[#002B5B] text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-900 shadow-lg shadow-blue-900/20"
               >
                 Continuar
               </button>
@@ -233,28 +279,28 @@ export default function Ouvidoria() {
         {step === 3 && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h3 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <span className="text-blue-500">3.</span> Detalhes do caso
+              <span className="text-blue-500">3.</span> Relato dos fatos
             </h3>
             
             <textarea
               className="w-full h-40 p-5 bg-slate-50 border border-slate-200 rounded-2xl mb-6 focus:outline-none focus:ring-2 focus:ring-[#002B5B] focus:bg-white resize-none transition-all text-slate-700 leading-relaxed"
-              placeholder="Descreva a situação com o máximo de detalhes possível..."
+              placeholder="Descreva o ocorrido com o máximo de detalhes..."
               value={formData.descricao}
               onChange={(e) => handleSelect('descricao', e.target.value)}
             ></textarea>
 
             <label className="block w-full border-2 border-dashed border-slate-300 rounded-2xl p-8 text-center cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-all group">
               <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl group-hover:scale-110 transition-transform">📷</div>
-              <span className="block font-bold text-slate-600 group-hover:text-blue-600">Adicionar Fotos ou Vídeo</span>
-              <span className="text-sm text-slate-400">Clique para selecionar arquivos (Opcional)</span>
+              <span className="block font-bold text-slate-600 group-hover:text-blue-600">Adicionar Mídia</span>
+              <span className="text-sm text-slate-400">Fotos ou vídeos auxiliam na fiscalização (Opcional)</span>
             </label>
 
             <div className="mt-10 flex justify-between items-center pt-6 border-t border-slate-100">
-              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2 transition-colors">Voltar</button>
+              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2">Voltar</button>
               <button 
                 onClick={nextStep}
                 disabled={!formData.descricao}
-                className="bg-[#002B5B] text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-900 transition shadow-lg shadow-blue-900/20"
+                className="bg-[#002B5B] text-white px-8 py-3 rounded-xl font-bold disabled:opacity-50 hover:bg-blue-900 shadow-lg shadow-blue-900/20"
               >
                 Continuar
               </button>
@@ -274,12 +320,12 @@ export default function Ouvidoria() {
                 className={`p-6 border-2 rounded-2xl cursor-pointer flex items-center gap-4 transition-all ${formData.identificacao === 'anonimo' ? 'border-[#002B5B] bg-blue-50/30' : 'border-slate-100 hover:border-slate-300'}`}
                 onClick={() => handleSelect('identificacao', 'anonimo')}
               >
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${formData.identificacao === 'anonimo' ? 'border-[#002B5B]' : 'border-slate-300'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.identificacao === 'anonimo' ? 'border-[#002B5B]' : 'border-slate-300'}`}>
                   {formData.identificacao === 'anonimo' && <div className="w-3 h-3 bg-[#002B5B] rounded-full"></div>}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800">Enviar como Anônimo</p>
-                  <p className="text-sm text-slate-500">Seus dados não aparecerão no relatório público.</p>
+                  <p className="font-bold text-slate-800">Enviar Anônimo</p>
+                  <p className="text-sm text-slate-500">Sua identidade será preservada.</p>
                 </div>
               </div>
 
@@ -287,40 +333,41 @@ export default function Ouvidoria() {
                 className={`p-6 border-2 rounded-2xl cursor-pointer flex items-center gap-4 transition-all ${formData.identificacao === 'identificado' ? 'border-[#002B5B] bg-blue-50/30' : 'border-slate-100 hover:border-slate-300'}`}
                 onClick={() => handleSelect('identificacao', 'identificado')}
               >
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${formData.identificacao === 'identificado' ? 'border-[#002B5B]' : 'border-slate-300'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${formData.identificacao === 'identificado' ? 'border-[#002B5B]' : 'border-slate-300'}`}>
                   {formData.identificacao === 'identificado' && <div className="w-3 h-3 bg-[#002B5B] rounded-full"></div>}
                 </div>
                 <div>
-                  <p className="font-bold text-slate-800">Quero me Identificar</p>
-                  <p className="text-sm text-slate-500">Ideal para receber retorno sobre a solução.</p>
+                  <p className="font-bold text-slate-800">Identificar-me</p>
+                  <p className="text-sm text-slate-500">Necessário para receber retornos específicos.</p>
                 </div>
               </div>
             </div>
 
             {formData.identificacao === 'identificado' && (
-               <div className="space-y-4 mb-8 animate-in fade-in pl-2 border-l-4 border-slate-200">
+               <div className="space-y-4 mb-8 animate-in fade-in pl-4 border-l-4 border-slate-200">
                  <input 
                    type="text" 
-                   placeholder="Seu Nome Completo" 
-                   className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#002B5B]"
+                   placeholder="Nome Completo" 
+                   className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#002B5B]"
                    onChange={(e) => handleSelect('nome', e.target.value)}
                  />
                  <input 
                    type="text" 
-                   placeholder="Seu WhatsApp (com DDD)" 
-                   className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#002B5B]"
+                   placeholder="WhatsApp (DDD + Número)" 
+                   className="w-full p-4 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#002B5B]"
                    onChange={(e) => handleSelect('whatsapp', e.target.value)}
                  />
                </div>
             )}
 
             <div className="mt-10 flex justify-between items-center pt-6 border-t border-slate-100">
-              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2 transition-colors">Voltar</button>
+              <button onClick={prevStep} className="text-slate-400 font-bold hover:text-[#002B5B] px-4 py-2">Voltar</button>
               <button 
                 onClick={handleSubmit}
+                disabled={isEnviando}
                 className="bg-emerald-500 text-white px-10 py-4 rounded-xl font-bold hover:bg-emerald-600 transition shadow-xl shadow-emerald-500/30 flex items-center gap-2 transform hover:-translate-y-1"
               >
-                <span>✅</span> Finalizar Registro
+                {isEnviando ? 'Enviando...' : '✅ Finalizar Registro'}
               </button>
             </div>
           </div>
@@ -333,10 +380,10 @@ export default function Ouvidoria() {
               🎉
             </div>
             <h2 className="text-4xl font-black text-slate-800 mb-4">Registro Realizado!</h2>
-            <p className="text-slate-500 mb-10 max-w-md mx-auto text-lg">Sua voz foi ouvida. Agora, compartilhe o protocolo para oficializar a demanda.</p>
+            <p className="text-slate-500 mb-10 max-w-md mx-auto text-lg">Sua voz ajuda a transformar Nuporanga. Guarde o seu número de protocolo.</p>
             
             <div className="bg-slate-50 border border-slate-200 p-8 rounded-3xl mb-10 inline-block shadow-inner">
-              <p className="text-xs text-slate-400 uppercase tracking-[0.2em] font-bold mb-2">Seu Número de Protocolo</p>
+              <p className="text-xs text-slate-400 uppercase tracking-[0.2em] font-bold mb-2">Protocolo de Registro</p>
               <p className="text-4xl font-mono font-black text-[#002B5B] tracking-wider select-all">{protocolo}</p>
             </div>
 
@@ -346,7 +393,7 @@ export default function Ouvidoria() {
               rel="noreferrer"
               className="block w-full bg-[#25D366] text-white font-bold py-5 rounded-2xl hover:bg-[#20bd5a] transition shadow-xl shadow-green-500/20 flex items-center justify-center gap-3 mb-6 transform hover:-translate-y-1"
             >
-              <span className="text-2xl">📲</span> Enviar Comprovante no WhatsApp
+              <span className="text-2xl">📲</span> Compartilhar no WhatsApp
             </a>
             
             <button 
