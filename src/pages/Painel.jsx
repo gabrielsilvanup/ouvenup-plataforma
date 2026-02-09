@@ -2,64 +2,57 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function Painel() {
-  // O link que você me enviou
-  const embedUrl = "https://lookerstudio.google.com/embed/reporting/a3e308d1-7d0c-43c0-941a-3106a3042bde/page/v1fnF"; 
-  // Nota: Transformei seu link curto no link completo de embed para garantir que funcione no iframe
+  
+  // SEU LINK DO LOOKER STUDIO (Já configurado):
+  const LOOKER_STUDIO_URL = "https://lookerstudio.google.com/embed/reporting/a59b0ac4-58c6-40f4-8778-76404cc10f50/page/SZ2nF";
 
   return (
-    <div className="max-w-7xl mx-auto pb-20 px-4">
+    <div className="bg-slate-50 min-h-screen flex flex-col font-sans">
       
       {/* CABEÇALHO */}
-      <div className="bg-[#002B5B] rounded-[2.5rem] p-8 md:p-12 text-white mb-10 shadow-2xl shadow-blue-900/20 relative overflow-hidden">
-        {/* Decorativo de fundo */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-400 rounded-full mix-blend-overlay filter blur-[60px] opacity-20 translate-x-1/2 -translate-y-1/2"></div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
-          <div>
-            <div className="inline-block bg-blue-800/50 border border-blue-700/50 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-cyan-300 mb-4">
-              Dados em Tempo Real
-            </div>
-            <h1 className="text-3xl md:text-5xl font-black mb-4 leading-tight">
-              Painel da Cidade
-            </h1>
-            <p className="text-blue-100 text-lg max-w-2xl font-light">
-              Acompanhe as estatísticas das demandas enviadas pela população. A transparência é o primeiro passo para a mudança.
-            </p>
-          </div>
-          
-          {/* Botão de Ação */}
-          <Link to="/ouvidoria" className="bg-white text-[#002B5B] px-8 py-4 rounded-xl font-bold hover:bg-cyan-50 transition shadow-lg whitespace-nowrap">
-            + Nova Demanda
-          </Link>
-        </div>
+      <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm z-10">
+         <div>
+           <h1 className="text-2xl font-black text-[#002B5B] flex items-center gap-2">
+             📊 Painel de Gestão
+             <span className="text-[10px] font-bold bg-green-100 text-green-700 px-2 py-1 rounded-full uppercase tracking-wider border border-green-200 animate-pulse">
+               Ao Vivo
+             </span>
+           </h1>
+           <p className="text-xs text-slate-400 hidden md:block mt-1">
+             Monitoramento em tempo real das demandas de Nuporanga.
+           </p>
+         </div>
+
+         <Link 
+            to="/ouvidoria" 
+            className="bg-[#002B5B] text-white px-6 py-3 rounded-xl font-bold hover:bg-blue-900 transition text-sm flex items-center gap-2 shadow-lg shadow-blue-900/20"
+         >
+           <span>+</span> Registrar Nova Demanda
+         </Link>
       </div>
 
-      {/* ÁREA DO GRÁFICO (IFRAME) */}
-      <div className="bg-white p-2 rounded-3xl shadow-xl border border-slate-100 overflow-hidden h-[800px] md:h-[600px] relative">
-        <iframe 
-          width="100%" 
-          height="100%" 
-          src={embedUrl} 
-          frameBorder="0" 
-          style={{ border: 0 }} 
-          allowFullScreen
-          title="Relatório OuveNup"
-          className="rounded-2xl bg-slate-50"
-        ></iframe>
-        
-        {/* Aviso caso demore a carregar */}
-        <div className="absolute inset-0 -z-10 flex items-center justify-center text-slate-400">
-          <div className="text-center">
-            <p className="mb-2">Carregando dados...</p>
-            <div className="w-8 h-8 border-4 border-slate-200 border-t-[#002B5B] rounded-full animate-spin mx-auto"></div>
-          </div>
+      {/* ÁREA DO DASHBOARD */}
+      <div className="flex-1 w-full p-2 md:p-6 flex flex-col">
+        <div className="flex-1 w-full bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden relative min-h-[800px]">
+           <iframe
+             src={LOOKER_STUDIO_URL}
+             frameBorder="0"
+             style={{ 
+               border: 0, 
+               width: '100%', 
+               height: '100%',
+               position: 'absolute',
+               top: 0,
+               left: 0 
+             }}
+             allowFullScreen
+             title="Painel OuveNup Looker Studio"
+           ></iframe>
         </div>
+         <p className="text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-6 mb-4">
+           Sistema OuveNup • Inteligência de Dados
+         </p>
       </div>
-
-      <p className="text-center text-slate-400 text-sm mt-6">
-        Dados atualizados automaticamente a partir da base do OuveNup.
-      </p>
-
     </div>
   );
 }
